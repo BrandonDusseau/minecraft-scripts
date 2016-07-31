@@ -1,9 +1,9 @@
 #!/bin/bash
-# Minecraft Backup Script v1.0.0
+# Minecraft Backup Script v1.1.0
 
 # File and directory configuration
 # Ensure these directories have correct permissions
-# Do not add trailing slashes
+# NOTE: Do not add trailing slashes
 MCDIR="/home/your_user/minecraft"
 BACKUPDIR="${MCDIR}/backups"
 
@@ -37,7 +37,8 @@ MCSCREENNAME="minecraft"
 
 mcsend() {
 	# $1 - Command to send
-	if $(screen -ls | grep -q "$MCSCREENNAME"); then
+	mcrunning
+	if [ $? = 1 ]; then
 		screen -S $MCSCREENNAME -X stuff "$1\n"
 	fi
 }
@@ -130,6 +131,25 @@ purgefiles() {
 		done
 	fi
 }
+
+mcrunning() {
+	$(pidof minecraft &>/dev/null)
+	ismcrunning=$?
+
+	if $(screen -ls | grep -q "$MCSCREENNAME") && [ ismcrunning = 0 ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+# Do not begin if screen or MC are not running.
+# NOTE: This relies on the Minecraft server process being named "minecraft"
+mcrunning
+if [ $? = 0 ]; then
+	logmsg "Minecraft is not running or is inaccessible; unable to start backup."
+	exit 1
+fi
 
 logmsg "Backup started"
 
