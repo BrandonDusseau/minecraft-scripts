@@ -147,8 +147,7 @@ mcrunning() {
 # NOTE: This relies on the Minecraft server process being named "minecraft"
 mcrunning
 if [ $? = 0 ]; then
-	logmsg "Minecraft is not running or is inaccessible; unable to start backup."
-	exit 1
+	logmsg "Minecraft is not running or is inaccessible; not sending commands to console."
 fi
 
 logmsg "Backup started"
