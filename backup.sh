@@ -402,7 +402,7 @@ if [ "$PURGEFAIL" = true ]; then
 	mcsay "§cPurge §cfailure §c- §ccheck §clog §cfile"
 fi
 
-mcserv# Display appropriate message, depending on backup status
+# Display appropriate message, depending on backup status
 if [ "$BACKUPFAIL" = false ]; then
 	mcsay "Backup complete."
 else
