@@ -3,7 +3,7 @@
 
 # File and directory configuration
 # Ensure these directories have correct permissions
-# NOTE: Do not add trailing slashes
+# Do not add trailing slashes
 MCDIR="/home/your_user/minecraft"
 BACKUPDIR="${MCDIR}/backups"
 
@@ -37,8 +37,7 @@ MCSCREENNAME="minecraft"
 
 mcsend() {
 	# $1 - Command to send
-	mcrunning
-	if [ $? = 1 ]; then
+	if mcrunning; then
 		screen -S $MCSCREENNAME -X stuff "$1\n"
 	fi
 }
@@ -143,11 +142,13 @@ mcrunning() {
 	fi
 }
 
-# Do not begin if screen or MC are not running.
+# Do not send console commands if MC or screen are not running
 # NOTE: This relies on the Minecraft server process being named "minecraft"
 mcrunning
-if [ $? = 0 ]; then
-	logmsg "Minecraft is not running or is inaccessible; not sending commands to console."
+if mcrunning; then
+	: # noop
+else
+	logmsg "WARN: Minecraft is not running or is inaccessible; not sending commands to console."
 fi
 
 logmsg "Backup started"
@@ -401,7 +402,7 @@ if [ "$PURGEFAIL" = true ]; then
 	mcsay "§cPurge §cfailure §c- §ccheck §clog §cfile"
 fi
 
-# Display appropriate message, depending on backup status
+mcserv# Display appropriate message, depending on backup status
 if [ "$BACKUPFAIL" = false ]; then
 	mcsay "Backup complete."
 else
