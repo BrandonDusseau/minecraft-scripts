@@ -33,6 +33,9 @@ RETAINMONTHS=12
 # Name of Minecraft screen session
 MCSCREENNAME="minecraft"
 
+
+WORLDNAME=$(grep "level-name" $MCDIR/server.properties | cut -d'=' -f2)
+
 ### Do not modify below this line unless you know what you are doing! ###
 
 mcsend() {
@@ -67,8 +70,8 @@ logmsg() {
 
 enablesave() {
 	# FIXME: Remove this when save-off works correctly
-	chmod -R u+w $MCDIR/world/playerdata
-	chmod -R u+w $MCDIR/world/stats
+	chmod -R u+w $MCDIR/$WORLDNAME/playerdata
+	chmod -R u+w $MCDIR/$WORLDNAME/stats
 	mcsend "save-on"
 }
 
@@ -82,7 +85,7 @@ err() {
 fileage() {
 	# $1 - Directory to search
 	# $2 - Formatting string
-	find $1 -maxdepth 1 -name $(ls -t $1 | grep -G "World_.*\.tar\.gz" | head -1) -printf $2
+	find $1 -maxdepth 1 -name $(ls -t $1 | grep -G "World_${WORLDNAME}_.*\.tar\.gz" | head -1) -printf $2
 }
 
 hasfile() {
@@ -96,7 +99,7 @@ hasfile() {
 
 numfiles() {
 	# $1 - Directory to check
-	ls $1 | grep -G "World_.*\.tar\.gz" | wc -l
+	ls $1 | grep -G "World_${WORLDNAME}_.*\.tar\.gz" | wc -l
 }
 
 PURGEFAIL=false
@@ -117,7 +120,7 @@ purgefiles() {
 			FILENUM=$(($FILENUM + 1))
 			FILE= read -rd $'\0' line < <(
 				find $1 -maxdepth 1 -type f -printf '%T@ %p\0' 2>/dev/null |
-				grep -ZzG "World_.*\.tar\.gz" |
+				grep -ZzG "World_${WORLDNAME}_.*\.tar\.gz" |
 				sort -zn
 			)
 			TOPURGE="${line#* }"
@@ -162,7 +165,7 @@ fi
 
 # Generate a filename
 STARTDATE=$(date +"%Y-%m-%d %H:%M:%S")
-FILEPREFIX="World_$(date +"%Y-%m-%d_%H.%M.%S" --date="$STARTDATE")"
+FILEPREFIX="World_${WORLDNAME}_$(date +"%Y-%m-%d_%H.%M.%S" --date="$STARTDATE")"
 
 # If running on a schedule, check if backups are necessary
 if [ "$SCHEDULE" = true ]; then
@@ -241,14 +244,14 @@ mcsend "save-off"
 # Workaround to lock playerdata and stats while saving is turned off
 # See https://bugs.mojang.com/browse/MC-3208
 # FIXME: Remove this when save-off works correctly
-chmod -R u-w $MCDIR/world/playerdata
-chmod -R u-w $MCDIR/world/stats
+chmod -R u-w $MCDIR/$WORLDNAME/playerdata
+chmod -R u-w $MCDIR/$WORLDNAME/stats
 
 # Back up the world to a temorary location
 # NOTE: This must be on the same filesystem as the backup target directory
 TEMPFILE=$BACKUPDIR/.mcbackup.tar
 # FIXME: Remove permissions override when above mentioned bug is resolved
-if ! $(tar --mode="a+rw" -cf $TEMPFILE -C $MCDIR world 2>&1 | logmsg ; test ${PIPESTATUS[0]} -eq 0); then
+if ! $(tar --mode="a+rw" -cf $TEMPFILE -C $MCDIR $WORLDNAME 2>&1 | logmsg ; test ${PIPESTATUS[0]} -eq 0); then
 	enablesave
 	rm $TEMPFILE 2>/dev/null
 	err "Unable to generate tar file. Aborting."
